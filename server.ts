@@ -16,13 +16,22 @@ app.post("/api/generate-module", async (req, res) => {
   try {
     const { subject, className, phase, semester, topic, timeAllocation, cp } = req.body;
 
-    if (!process.env.GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY is missing in environment variables");
-      return res.status(500).json({ error: "GEMINI_API_KEY is not configured in Vercel dashboard" });
+    const key = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "").trim().replace(/^["']|["']$/g, '');
+    
+    if (!key || key === "REPLACE_WITH_YOUR_GEMINI_API_KEY" || key.length < 10) {
+      console.error("GEMINI_API_KEY is missing, too short, or using placeholder value");
+      return res.status(500).json({ 
+        error: "GEMINI_API_KEY belum dikonfigurasi dengan benar. \n\n" +
+               "Jika di Vercel: Pergi ke Settings > Environment Variables, tambahkan GEMINI_API_KEY dengan nilai API Key dari Google AI Studio.\n" +
+               "Jika di AI Studio: Pastikan API Key valid di bagian Settings." 
+      });
     }
 
+    // Informative logging (keeping key secret)
+    console.log(`Attempting Gemini API call. Key length: ${key.length}, Starts with: ${key.substring(0, 7)}...`);
+
     const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: key,
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
@@ -134,10 +143,30 @@ app.post("/api/generate-module", async (req, res) => {
       console.error("Failed to parse Gemini response as JSON:", text);
       res.status(500).json({ error: "Invalid JSON format received from AI" });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating module:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
-    res.status(500).json({ error: `Gagal generate modul: ${errorMessage}` });
+    
+    let message = "Terjadi kesalahan internal.";
+    
+    // Check for common Gemini API errors
+    if (error.message?.includes("API key not valid")) {
+      message = "API Key tidak valid. Pastikan GEMINI_API_KEY sudah benar di konfigurasi Vercel/AI Studio.";
+    } else if (error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED")) {
+      message = "Kuota API Gemini telah habis atau limit tercapai. \n\n" +
+                "Saran: \n" +
+                "1. Tunggu beberapa saat dan coba lagi.\n" +
+                "2. Jika terus berlanjut, Anda bisa masuk ke 'Settings > Secrets' dan pilih API Key yang memiliki penagihan aktif (billing enabled) untuk kuota yang lebih besar.";
+    } else if (error.message) {
+      // Try to extract useful info from a JSON error message if it's a string
+      try {
+        const parsed = JSON.parse(error.message);
+        message = parsed.error?.message || message;
+      } catch {
+        message = error.message;
+      }
+    }
+
+    res.status(500).json({ error: message });
   }
 });
 

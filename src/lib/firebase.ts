@@ -47,8 +47,9 @@ export const signInWithGoogle = async () => {
     if (error.code === 'auth/popup-closed-by-user') {
       console.warn("User closed the login popup.");
     } else if (error.code === 'auth/unauthorized-domain') {
-      console.error("This domain is not authorized in Firebase Console. Please add it to Authentication > Settings > Authorized Domains.");
-      alert("Error: Domain ini belum diizinkan di Firebase. Hubungi admin atau tambahkan domain ini di Firebase Console.");
+      const currentDomain = window.location.hostname;
+      console.error(`Domain "${currentDomain}" is not authorized in Firebase Console.`);
+      alert(`Error: Domain "${currentDomain}" belum diizinkan di Firebase Console. \n\nSilakan buka Firebase Console > Authentication > Settings > Authorized Domains dan tambahkan domain ini.`);
     } else {
       console.error("Login Error:", error.code, error.message);
     }

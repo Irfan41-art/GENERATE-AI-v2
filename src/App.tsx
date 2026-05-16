@@ -155,7 +155,10 @@ export default function App() {
         }),
       });
 
-      if (!response.ok) throw new Error('Generate failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Generate failed');
+      }
       
       const data = await response.json();
       setGeneratedData(data);
@@ -179,9 +182,9 @@ export default function App() {
           handleFirestoreError(err, FirestoreOp.CREATE, 'modules');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Gagal generate modul. Silakan coba lagi.");
+      alert(`Gagal generate modul: ${error.message || "Silakan coba lagi."}`);
     } finally {
       setIsGenerating(false);
     }
