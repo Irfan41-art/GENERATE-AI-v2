@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = 3000;
 
 app.use(express.json());
@@ -17,7 +17,8 @@ app.post("/api/generate-module", async (req, res) => {
     const { subject, className, phase, semester, topic, timeAllocation, cp } = req.body;
 
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
+      console.error("GEMINI_API_KEY is missing in environment variables");
+      return res.status(500).json({ error: "GEMINI_API_KEY is not configured in Vercel dashboard" });
     }
 
     const ai = new GoogleGenAI({
@@ -40,120 +41,40 @@ app.post("/api/generate-module", async (req, res) => {
       Alokasi Waktu: ${timeAllocation}
       Capaian Pembelajaran (CP): ${cp || "-"}
 
-      Hasilkan konten edukasi yang mendalam dan relevan dalam format JSON dengan struktur berikut:
-      {
-        "pengetahuan_awal": "...",
-        "kebutuhan_belajar": {
-          "visual": "...",
-          "auditori": "...",
-          "kinestetik": "..."
-        },
-        "karakteristik_materi": {
-          "jenis_pengetahuan": "...",
-          "konseptual": "...",
-          "prosedural": "...",
-          "relevansi": "...",
-          "tingkat_kesulitan": "...",
-          "struktur_materi": "...",
-          "integrasi_nilai": "..."
-        },
-        "dimensi_profil": {
-          "iman": "...",
-          "kewargaan": "...",
-          "nalar_kritis": "...",
-          "kreativitas": "...",
-          "kolaborasi": "...",
-          "kemandirian": "...",
-          "kesehatan": "...",
-          "komunikasi": "..."
-        },
-        "desain_pembelajaran": {
-          "lintas_disiplin": "...",
-          "tujuan_pembelajaran": "...",
-          "indikator": ["Indikator 1", "Indikator 2", "Indikator 3", "Indikator 4"],
-          "topik_kontekstual": "..."
-        },
-        "kerangka_pembelajaran": {
-          "mindful": "...",
-          "meaningful": "...",
-          "joyful": "...",
-          "metode": "...",
-          "diferensiasi": {
-            "konten": "...",
-            "proses": "...",
-            "produk": "..."
-          }
-        },
-        "kemitraan": {
-          "sekolah": "...",
-          "luar_sekolah": "...",
-          "digital": "..."
-        },
-        "lingkungan": {
-          "fisik": "...",
-          "virtual": "...",
-          "budaya": "..."
-        },
-        "pemanfaatan_digital": "...",
-        "langkah_langkah": {
-          "pertemuan_detail": "PERTEMUAN 1 (3 JP : 105 MENIT)",
-          "topik": "...",
-          "pendahuluan": {
-            "durasi": "15 MENIT",
-            "orientasi": "Salam, doa, dan presensi.",
-            "apersepsi": "...",
-            "motivasi": "...",
-            "tujuan": "...",
-            "asesmen_diag": "..."
-          },
-          "inti": {
-            "durasi": "75 MENIT",
-            "eksplorasi": "...",
-            "eksperimen": "...",
-            "diskusi": "..."
-          },
-          "penutup": {
-            "durasi": "15 MENIT",
-            "refleksi": "...",
-            "tindak_lanjut": "...",
-            "penutup_doa": "Doa dan salam."
-          }
-        },
-        "asesmen": {
-          "diagnostik": { "praktik": "...", "obs": "..." },
-          "formatif": { "tugas": "...", "penilaian": "...", "obs": "..." },
-          "sumatif": { 
-            "tugas": "...", 
-            "penilaian": "...", 
-            "praktik_kinerja": "...", 
-            "penilaian_kinerja": "...",
-            "tes_tertulis": "..." 
-          }
-        }
-      }
-
+      Hasilkan konten edukasi yang mendalam dan relevan.
+      
       PENTING:
       - Gunakan bahasa Indonesia yang formal, inspiratif dan sesuai standar kurikulum Merdeka.
-      - Pastikan Bagian B (Identifikasi Kesiapan Murid) memiliki sub-poin Pengetahuan Awal, Minat (teks khusus), Latar Belakang (teks khusus), dan Kebutuhan Belajar (a, b, c).
+      - Pastikan Bagian B (Identifikasi Kesiapan Murid) memiliki sub-poin Pengetahuan Awal, Minat, Latar Belakang, dan Kebutuhan Belajar.
       - Bagian G HARUS mengikuti struktur yang ketat: Pendahuluan (15 MENIT), Inti (75 MENIT), dan Penutup (15 MENIT).
-      - Kembalikan HANYA JSON tanpa teks lain.
     `;
 
+    // Using responseMimeType to guarantee valid JSON
     const result = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        systemInstruction: "Anda adalah asisten ahli kurikulum yang hanya merespon dalam format JSON sesuai skema yang diminta. Jangan memberikan teks penjelasan di luar JSON.",
+      }
     });
     
-    let text = result.text || "";
+    const text = result.text;
+    if (!text) {
+      throw new Error("Empty response from Gemini API");
+    }
     
-    // Clean JSON if needed (remove markdown backticks)
-    text = text.replace(/```json|```/g, "").trim();
-    
-    const moduleData = JSON.parse(text);
-    res.json(moduleData);
+    try {
+      const moduleData = JSON.parse(text);
+      res.json(moduleData);
+    } catch (parseError) {
+      console.error("Failed to parse Gemini response as JSON:", text);
+      res.status(500).json({ error: "Invalid JSON format received from AI" });
+    }
   } catch (error) {
     console.error("Error generating module:", error);
-    res.status(500).json({ error: "Failed to generate module content" });
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    res.status(500).json({ error: `Gagal generate modul: ${errorMessage}` });
   }
 });
 
@@ -173,9 +94,12 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  // Only listen if this file is run directly
+  if (import.meta.url === `file://${process.argv[1]}` || process.env.NODE_ENV !== "production") {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();
