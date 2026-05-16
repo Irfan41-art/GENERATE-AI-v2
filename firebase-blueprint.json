@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public user information",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Module": {
+      "title": "Learning Module",
+      "description": "A generated deep learning module",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "subject": { "type": "string" },
+        "className": { "type": "string" },
+        "phase": { "type": "string" },
+        "semester": { "type": "string" },
+        "topic": { "type": "string" },
+        "timeAllocation": { "type": "string" },
+        "cp": { "type": "string" },
+        "content": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "subject", "className", "phase", "semester", "topic", "timeAllocation", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profile data"
+    },
+    "modules/{moduleId}": {
+      "schema": "Module",
+      "description": "Collection of generated modules"
+    }
+  }
+}

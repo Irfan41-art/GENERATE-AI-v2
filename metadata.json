@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Generator RPM",
+  "description": "Aplikasi untuk generate modul pembelajaran deep learning (RPM) otomatis menggunakan AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
