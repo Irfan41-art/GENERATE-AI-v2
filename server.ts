@@ -31,8 +31,7 @@ app.post("/api/generate-module", async (req, res) => {
     });
 
     const prompt = `
-      Anda adalah ahli kurikulum "Deep Learning" (Mindful, Meaningful, Joyful Learning) untuk kurikulum Merdeka di Indonesia. 
-      Tugas Anda adalah membuat RENCANA PELAKSANAAN PEMBELAJARAN MENDALAM berdasarkan data berikut:
+      Buatlah RENCANA PELAKSANAAN PEMBELAJARAN MENDALAM (Deep Learning) berdasarkan data berikut:
       Mata Pelajaran: ${subject}
       Kelas: ${className}
       Fase: ${phase}
@@ -41,12 +40,76 @@ app.post("/api/generate-module", async (req, res) => {
       Alokasi Waktu: ${timeAllocation}
       Capaian Pembelajaran (CP): ${cp || "-"}
 
-      Hasilkan konten edukasi yang mendalam dan relevan.
-      
-      PENTING:
-      - Gunakan bahasa Indonesia yang formal, inspiratif dan sesuai standar kurikulum Merdeka.
-      - Pastikan Bagian B (Identifikasi Kesiapan Murid) memiliki sub-poin Pengetahuan Awal, Minat, Latar Belakang, dan Kebutuhan Belajar.
-      - Bagian G HARUS mengikuti struktur yang ketat: Pendahuluan (15 MENIT), Inti (75 MENIT), dan Penutup (15 MENIT).
+      Gunakan skema JSON berikut:
+      {
+        "pengetahuan_awal": "...",
+        "minat": "...",
+        "latar_belakang": "...",
+        "kebutuhan_belajar": {
+          "visual": "...",
+          "auditori": "...",
+          "kinestetik": "..."
+        },
+        "karakteristik_materi": {
+          "jenis_pengetahuan": "...",
+          "konseptual": "...",
+          "prosedural": "...",
+          "relevansi": "...",
+          "tingkat_kesulitan": "...",
+          "struktur_materi": "...",
+          "integrasi_nilai": "..."
+        },
+        "dimensi_profil": {
+          "iman": "...",
+          "kewargaan": "...",
+          "nalar_kritis": "...",
+          "kreativitas": "...",
+          "kolaborasi": "...",
+          "kemandirian": "...",
+          "kesehatan": "...",
+          "komunikasi": "..."
+        },
+        "desain_pembelajaran": {
+          "lintas_disiplin": "...",
+          "tujuan_pembelajaran": "...",
+          "indikator": ["...", "..."],
+          "topik_kontekstual": "..."
+        },
+        "kerangka_pembelajaran": {
+          "mindful": "...",
+          "meaningful": "...",
+          "joyful": "...",
+          "metode": "...",
+          "diferensiasi": {
+            "konten": "...",
+            "proses": "...",
+            "produk": "..."
+          }
+        },
+        "kemitraan": {
+          "sekolah": "...",
+          "luar_sekolah": "...",
+          "digital": "..."
+        },
+        "lingkungan": {
+          "fisik": "...",
+          "virtual": "...",
+          "budaya": "..."
+        },
+        "pemanfaatan_digital": "...",
+        "langkah_langkah": {
+          "pertemuan_detail": "...",
+          "topik": "...",
+          "pendahuluan": { "durasi": "15 MENIT", "orientasi": "...", "apersepsi": "...", "motivasi": "...", "tujuan": "...", "asesmen_diag": "..." },
+          "inti": { "durasi": "75 MENIT", "eksplorasi": "...", "eksperimen": "...", "diskusi": "..." },
+          "penutup": { "durasi": "15 MENIT", "refleksi": "...", "tindak_lanjut": "...", "penutup_doa": "..." }
+        },
+        "asesmen": {
+          "diagnostik": { "praktik": "...", "obs": "..." },
+          "formatif": { "tugas": "...", "penilaian": "...", "obs": "..." },
+          "sumatif": { "tugas": "...", "penilaian": "...", "praktik_kinerja": "...", "penilaian_kinerja": "...", "tes_tertulis": "..." }
+        }
+      }
     `;
 
     // Using responseMimeType to guarantee valid JSON
@@ -55,7 +118,7 @@ app.post("/api/generate-module", async (req, res) => {
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        systemInstruction: "Anda adalah asisten ahli kurikulum yang hanya merespon dalam format JSON sesuai skema yang diminta. Jangan memberikan teks penjelasan di luar JSON.",
+        systemInstruction: "Anda adalah asisten ahli kurikulum Merdeka. Hasilkan rencana pembelajaran mendalam (Mindful, Meaningful, Joyful) dalam format JSON. Isi SEMUA field dengan konten yang detail, inspiratif, dan relevan. Jangan biarkan field kosong.",
       }
     });
     

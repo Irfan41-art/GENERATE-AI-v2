@@ -295,8 +295,8 @@ Latar Belakang: Peserta didik memiliki pengalaman bermain dengan balok susun, le
 
               createHeaderRow("B. IDENTIFIKASI KESIAPAN MURID"),
               createDataRow("1. Pengetahuan Awal", generatedData.pengetahuan_awal || "-"),
-              createDataRow("2. Minat", "Murid memiliki minat yang tinggi dalam kegiatan membangun, merakit, dan berkreasi menggunakan berbagai media, termasuk barang-barang bekas."),
-              createDataRow("3. Latar Belakang", "Murid memiliki pengalaman bermain dengan balok susun, lego, atau membuat hasta karya sederhana, sehingga memiliki pemahaman intuitif tentang keseimbangan dan konstruksi."),
+              createDataRow("2. Minat", generatedData.minat || "-"),
+              createDataRow("3. Latar Belakang", generatedData.latar_belakang || "-"),
               createDataRow("4. Kebutuhan Belajar", 
                 `a) Visual: ${generatedData.kebutuhan_belajar?.visual || "-"}\n` +
                 `b) Auditori: ${generatedData.kebutuhan_belajar?.auditori || "-"}\n` +
@@ -461,7 +461,15 @@ Latar Belakang: Peserta didik memiliki pengalaman bermain dengan balok susun, le
               </div>
             ) : (
               <button 
-                onClick={signInWithGoogle}
+                onClick={async () => {
+                  try {
+                    await signInWithGoogle();
+                  } catch (err: any) {
+                    if (err.code !== 'auth/popup-closed-by-user') {
+                      alert("Gagal masuk: " + (err.message || "Terjadi kesalahan tidak dikenal"));
+                    }
+                  }
+                }}
                 className="bg-white border border-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-all text-sm shadow-sm"
               >
                 <LogIn className="w-4 h-4" />
@@ -681,11 +689,11 @@ Latar Belakang: Peserta didik memiliki pengalaman bermain dengan balok susun, le
                       </tr>
                       <tr>
                         <td className="p-4 border-2 border-sky-100 font-bold bg-sky-50 text-sky-800">2. Minat</td>
-                        <td className="p-4 border-2 border-sky-100 text-justify leading-relaxed">Murid memiliki minat yang tinggi dalam kegiatan membangun, merakit, dan berkreasi menggunakan berbagai media, termasuk barang-barang bekas.</td>
+                        <td className="p-4 border-2 border-sky-100 text-justify leading-relaxed">{generatedData.minat || "-"}</td>
                       </tr>
                       <tr>
                         <td className="p-4 border-2 border-sky-100 font-bold bg-sky-50 text-sky-800">3. Latar Belakang</td>
-                        <td className="p-4 border-2 border-sky-100 text-justify leading-relaxed">Murid memiliki pengalaman bermain dengan balok susun, lego, atau membuat hasta karya sederhana, sehingga memiliki pemahaman intuitif tentang keseimbangan dan konstruksi.</td>
+                        <td className="p-4 border-2 border-sky-100 text-justify leading-relaxed">{generatedData.latar_belakang || "-"}</td>
                       </tr>
                       <tr>
                         <td className="p-4 border-2 border-sky-100 font-bold bg-sky-50 text-sky-800">4. Kebutuhan Belajar</td>
