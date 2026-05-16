@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Download, 
   Copy, 
@@ -11,7 +11,9 @@ import {
   LogIn,
   LogOut,
   User as UserIcon,
-  History
+  History,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { 
@@ -70,6 +72,7 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedData, setGeneratedData] = useState<any>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -184,7 +187,13 @@ export default function App() {
       }
     } catch (error: any) {
       console.error(error);
-      alert(`Gagal generate modul: ${error.message || "Silakan coba lagi."}`);
+      const isQuotaError = error.message?.toLowerCase().includes("kuota") || error.message?.toLowerCase().includes("quota");
+      
+      if (isQuotaError) {
+        setShowQuotaModal(true);
+      } else {
+        alert(`Gagal generate modul: ${error.message || "Silakan coba lagi."}`);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -953,6 +962,66 @@ Latar Belakang: Peserta didik memiliki pengalaman bermain dengan balok susun, le
           </div>
         </section>
       </main>
+
+      <AnimatePresence>
+        {showQuotaModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowQuotaModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative"
+            >
+              <div className="bg-amber-50 p-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-8 h-8 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900">Kuota Free Tier Habis</h3>
+                <p className="text-slate-500 text-sm mt-2 font-medium">
+                  Penggunaan API Key Anda telah mencapai batas gratis (Free Tier).
+                </p>
+              </div>
+              
+              <div className="p-8 space-y-4">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Solusi:</p>
+                  <ul className="text-sm text-slate-600 space-y-2 font-medium">
+                    <li className="flex gap-2">
+                      <span className="text-amber-500 font-bold">1.</span>
+                      Tunggu beberapa saat (sekitar 1 menit) untuk reset limit per menit.
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-amber-500 font-bold">2.</span>
+                      Jika Anda menggunakan AI Studio/Vercel, gunakan API Key dengan billing aktif untuk kuota lebih besar.
+                    </li>
+                  </ul>
+                </div>
+
+                <button 
+                  onClick={() => setShowQuotaModal(false)}
+                  className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                >
+                  Saya Mengerti
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setShowQuotaModal(false)}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
